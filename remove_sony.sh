@@ -1,0 +1,1 @@
+./show_apps.sh | grep sony | cut -d "=" -f2 | xargs -n1 adb uninstall "$@"

@@ -1,24 +1,29 @@
 #!/bin/bash -e
 
+PARAM=$2
 
 function chkpass {
-    if [ -z "$2" ]; then
+    if [ -z "$PARAM" ]; then
         echo "Poner la passphrase."
         exit
     fi
-    pass="$2"
+    pass="$PARAM"
 }
 
 function encrypt {
     find ./ -type f -not -name "*.gpg" -exec echo {} \; -exec gpg --symmetric -o {}.gpg --passphrase $pass --yes {} \;
 }
 
-function clean {
+function cleanplain {
     find ./ -not -name "*.gpg" -not -name "\." -not -name "\.." -exec shred -n 3 -z -u {} \;
 }
 
+function cleangpg {
+    find ./ -name "*.gpg" -exec shred -n 3 -z -u {} \;
+}
+
 function decrypt {
-    find ./ -name "*.gpg" -exec gpg {} \;
+    find ./ -name "*.gpg" -exec gpg --passphrase $pass --yes {} \;
 }
 
 
@@ -31,14 +36,18 @@ case $key in
     chkpass
     encrypt
     ;;
-    -c|--clean)
-    echo "Limpiar"
-    clean
+    -c1|--clean1)
+    echo "Limpiar normales"
+    cleanplain
+    ;;
+    -c2|--clean2)
+    echo "Limpiar cifrados"
+    cleangpg
     ;;
     -d|--decrypt)
     chkpass
     echo "Descifrar"
-    clean
+    decrypt
     ;;
     *)
     echo "Usage: [-c|--clean]] | [-e|--encrypt password] | [-d| --decrypt password]"
